@@ -1,5 +1,5 @@
+import 'package:engineer_assistant/screen/home_screen.dart';
 import 'package:flutter/material.dart';
-import './screen/welcome_screen.dart';
 
 // Точка входа приложения
 void main() {
@@ -24,7 +24,7 @@ class CalculatorApp extends StatelessWidget {
         brightness: Brightness.dark,
       ),
       themeMode: ThemeMode.system,
-      home: const WelcomeScreen(),
+      home: const HomeScreen(),
     );
   }
 }

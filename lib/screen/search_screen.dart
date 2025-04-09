@@ -61,7 +61,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       final areaId = area['id'] as int;
                       final calculators = _calculatorsByArea[areaId] ?? [];
                       return ExpansionTile(
-                        leading: const Icon(Icons.build),
+                        // leading: const Icon(Icons.build),
                         title: Text(area['name']),
                         initiallyExpanded: _isExpanded[areaId] ?? false,
                         onExpansionChanged: (expanded) {

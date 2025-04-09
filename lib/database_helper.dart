@@ -64,8 +64,14 @@ class DatabaseHelper {
         ''');
 
         // Вставка начальных данных в таблицу areas
-        await db.insert('areas', {'name': 'Гражданское'});
-        await db.insert('areas', {'name': 'Промышленное'});
+        await db.insert('areas', {'name': 'Гражданское строительство'});
+        await db.insert('areas', {'name': 'Промышленное строительство'});
+        await db.insert('areas', {'name': 'Инфраструктурное строительство'});
+        await db.insert('areas', {'name': 'Энергетическо строительство'});
+        await db.insert('areas', {'name': 'Гидротехническое строительство'});
+        await db.insert('areas', {'name': 'Ландшафтное строительство'});
+        await db.insert('areas', {'name': 'Специализированное строительство'});
+        await db.insert('areas', {'name': 'Реконструкция и реставрация'});
 
         developer.log(
           'Inserted data into areas table',
@@ -97,6 +103,18 @@ class DatabaseHelper {
         ); // <<<< Добавлено логирование
       },
     );
+  }
+
+  // Изменено: Добавлен метод для сброса базы данных
+  Future<void> resetDatabase() async {
+    final dbPath = await getDatabasesPath();
+    final path = '$dbPath/calculator_app.db';
+    await database; // Убедись, что база инициализирована
+    await _database?.close(); // Закрываем текущую базу
+    _database = null; // Сбрасываем ссылку
+    await deleteDatabase(path); // Удаляем файл базы
+    developer.log('Database reset at $path', name: 'DatabaseHelper');
+    await database; // Повторно открываем, что вызовет onCreate
   }
 
   // Сохранение данных пользователя
