@@ -30,8 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Агрегатор калькуляторов ПТО')),
-      body: _screens[_selectedIndex],
+      // appBar: AppBar(title: const Text('Агрегатор калькуляторов ПТО')),
+      body: SafeArea(
+        child: _screens[_selectedIndex],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Поиск'),

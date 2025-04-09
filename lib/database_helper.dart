@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'dart:developer' as developer;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -12,11 +13,21 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
+    developer.log(
+      'Initializing database...',
+      name: 'DatabaseHelper',
+    ); // <<<< Добавлено логирование
+
     // Изменено: Добавлены таблицы areas и calculators
     return await openDatabase(
       'calculator_app.db',
       version: 1,
       onCreate: (db, version) async {
+        developer.log(
+          'Creating tables...',
+          name: 'DatabaseHelper',
+        ); // <<<< Добавлено логирование
+
         // Таблица Users
         await db.execute('''
           CREATE TABLE Users (
@@ -56,6 +67,11 @@ class DatabaseHelper {
         await db.insert('areas', {'name': 'Гражданское'});
         await db.insert('areas', {'name': 'Промышленное'});
 
+        developer.log(
+          'Inserted data into areas table',
+          name: 'DatabaseHelper',
+        ); // <<<< Добавлено логирование
+
         // Вставка начальных данных в таблицу calculators
         await db.insert('calculators', {
           'calc_subarea_key': 'civil_rebar_mass',
@@ -75,6 +91,10 @@ class DatabaseHelper {
           'calc_id': 1,
           'calc_name': 'Расчет массы арматуры',
         });
+        developer.log(
+          'Inserted data into calculators table',
+          name: 'DatabaseHelper',
+        ); // <<<< Добавлено логирование
       },
     );
   }
@@ -90,8 +110,31 @@ class DatabaseHelper {
     required int areaId, // Изменено: Теперь сохраняем area_id
   }) async {
     final db = await database;
-    await db.insert(
-      'Users',
+    await db.insert('Users', {
+      'first_name': firstName,
+      'last_name': lastName,
+      'gender': gender,
+      'birth_date': birthDate,
+      'position': position,
+      'organization': organization,
+      'area_id': areaId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // Изменено: Добавлен метод для полного обновления пользователя
+  Future<void> updateUserFull({
+    required int id,
+    required String firstName,
+    required String lastName,
+    required String gender,
+    required String birthDate,
+    required String position,
+    required String organization,
+    required int areaId,
+  }) async {
+    final db = await database;
+    await db.update(
+      'users',
       {
         'first_name': firstName,
         'last_name': lastName,
@@ -101,7 +144,8 @@ class DatabaseHelper {
         'organization': organization,
         'area_id': areaId,
       },
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
@@ -125,6 +169,7 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     final updatedData = <String, dynamic>{};
+
     if (firstName != null) updatedData['first_name'] = firstName;
     if (lastName != null) updatedData['last_name'] = lastName;
     if (gender != null) updatedData['gender'] = gender;
@@ -134,12 +179,7 @@ class DatabaseHelper {
     if (areaId != null) updatedData['area_id'] = areaId;
 
     if (updatedData.isNotEmpty) {
-      await db.update(
-        'Users',
-        updatedData,
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.update('Users', updatedData, where: 'id = ?', whereArgs: [id]);
     }
   }
 
@@ -152,13 +192,21 @@ class DatabaseHelper {
   // Получение названия области по ID
   Future<String?> getAreaName(int areaId) async {
     final db = await database;
-    final result = await db.query('areas', where: 'id = ?', whereArgs: [areaId]);
+    final result = await db.query(
+      'areas',
+      where: 'id = ?',
+      whereArgs: [areaId],
+    );
     return result.isNotEmpty ? result.first['name'] as String? : null;
   }
 
   // Получение калькуляторов по area_id
   Future<List<Map<String, dynamic>>> getCalculatorsByArea(int areaId) async {
     final db = await database;
-    return await db.query('calculators', where: 'area_id = ?', whereArgs: [areaId]);
+    return await db.query(
+      'calculators',
+      where: 'area_id = ?',
+      whereArgs: [areaId],
+    );
   }
 }

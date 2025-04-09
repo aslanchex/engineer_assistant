@@ -31,7 +31,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _loadAreas() async {
     final areas = await _dbHelper.getAreas();
     if (mounted) {
-      setState(() => _areas = areas);
+      // setState(() => _areas = areas);
+
+      setState(() {
+        _areas = areas;
+      });
     }
   }
 
@@ -88,82 +92,84 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Добро пожаловать')),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(16.0),
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'Имя'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _lastNameController,
-                  decoration: const InputDecoration(labelText: 'Фамилия'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _gender,
-                  decoration: const InputDecoration(labelText: 'Пол'),
-                  items: const [
-                    DropdownMenuItem(value: 'Мужской', child: Text('Мужской')),
-                    DropdownMenuItem(value: 'Женский', child: Text('Женский')),
-                  ],
-                  onChanged: (value) => setState(() => _gender = value),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: 'Дата рождения',
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.calendar_today),
-                      onPressed: _selectBirthDate,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _firstNameController,
+                    decoration: const InputDecoration(labelText: 'Имя'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _lastNameController,
+                    decoration: const InputDecoration(labelText: 'Фамилия'),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _gender,
+                    decoration: const InputDecoration(labelText: 'Пол'),
+                    items: const [
+                      DropdownMenuItem(value: 'Мужской', child: Text('Мужской')),
+                      DropdownMenuItem(value: 'Женский', child: Text('Женский')),
+                    ],
+                    onChanged: (value) => setState(() => _gender = value),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      labelText: 'Дата рождения',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: _selectBirthDate,
+                      ),
+                    ),
+                    controller: TextEditingController(
+                      text: _birthDate?.toLocal().toString().split(' ')[0] ?? '',
                     ),
                   ),
-                  controller: TextEditingController(
-                    text: _birthDate?.toLocal().toString().split(' ')[0] ?? '',
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _positionController,
+                    decoration: const InputDecoration(labelText: 'Должность'),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _positionController,
-                  decoration: const InputDecoration(labelText: 'Должность'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _organizationController,
-                  decoration: const InputDecoration(labelText: 'Организация'),
-                ),
-                const SizedBox(height: 16),
-                // Изменено: Области подтягиваются из базы
-                DropdownButton<int>(
-                  value: _selectedAreaId,
-                  hint: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Область работы'),
-                      Text(' *', style: TextStyle(color: Colors.red)),
-                    ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _organizationController,
+                    decoration: const InputDecoration(labelText: 'Организация'),
                   ),
-                  items: _areas.map((area) {
-                    return DropdownMenuItem<int>(
-                      value: area['id'],
-                      child: Text(area['name']),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => _selectedAreaId = value),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _saveAndProceed,
-                  child: const Text('Сохранить'),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  // Изменено: Области подтягиваются из базы
+                  DropdownButton<int>(
+                    value: _selectedAreaId,
+                    hint: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Область работы'),
+                        Text(' *', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                    items: _areas.map((area) {
+                      return DropdownMenuItem<int>(
+                        value: area['id'],
+                        child: Text(area['name']),
+                      );
+                    }).toList(),
+                    onChanged: (value) => setState(() => _selectedAreaId = value),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _saveAndProceed,
+                    child: const Text('Сохранить'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

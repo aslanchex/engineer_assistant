@@ -12,7 +12,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final _dbHelper = DatabaseHelper.instance;
   List<Map<String, dynamic>> _areas = [];
   Map<int, List<Map<String, dynamic>>> _calculatorsByArea = {};
-  Map<int, bool> _isExpanded = {};
+  final Map<int, bool> _isExpanded = {};
 
   @override
   void initState() {
