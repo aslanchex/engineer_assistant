@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../category.dart';
+import '../database_helper.dart';
 
-// Экран "Поиск"
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -10,7 +9,33 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _categories = [MetalsCategory()];
+  final _dbHelper = DatabaseHelper.instance;
+  List<Map<String, dynamic>> _areas = [];
+  Map<int, List<Map<String, dynamic>>> _calculatorsByArea = {};
+  Map<int, bool> _isExpanded = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAreasAndCalculators();
+  }
+
+  Future<void> _loadAreasAndCalculators() async {
+    final areas = await _dbHelper.getAreas();
+    final Map<int, List<Map<String, dynamic>>> calculatorsByArea = {};
+    for (var area in areas) {
+      final areaId = area['id'] as int;
+      final calculators = await _dbHelper.getCalculatorsByArea(areaId);
+      calculatorsByArea[areaId] = calculators;
+      _isExpanded[areaId] = false; // По умолчанию все области свернуты
+    }
+    if (mounted) {
+      setState(() {
+        _areas = areas;
+        _calculatorsByArea = calculatorsByArea;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,29 +52,33 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final category = _categories[index];
-                return ExpansionTile(
-                  leading: Icon(category.icon),
-                  title: Text(category.name),
-                  initiallyExpanded: category.isExpanded,
-                  onExpansionChanged: (expanded) {
-                    setState(() => category.isExpanded = expanded);
-                  },
-                  children: category.calculators.map((calculator) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
-                      child: ListTile(
-                        title: Text(calculator),
-                        onTap: () {},
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
+            child: _areas.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _areas.length,
+                    itemBuilder: (context, index) {
+                      final area = _areas[index];
+                      final areaId = area['id'] as int;
+                      final calculators = _calculatorsByArea[areaId] ?? [];
+                      return ExpansionTile(
+                        leading: const Icon(Icons.build),
+                        title: Text(area['name']),
+                        initiallyExpanded: _isExpanded[areaId] ?? false,
+                        onExpansionChanged: (expanded) {
+                          setState(() => _isExpanded[areaId] = expanded);
+                        },
+                        children: calculators.map((calculator) {
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 16.0),
+                            child: ListTile(
+                              title: Text(calculator['calc_name']),
+                              onTap: () {},
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
