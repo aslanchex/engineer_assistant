@@ -4,7 +4,6 @@ import '../data/database_helper.dart';
 import 'dart:developer' as developer;
 
 import '../main.dart';
-import '../search_app_theme.dart'; // Добавлено: Для логирования
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

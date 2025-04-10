@@ -18,7 +18,7 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Map<String, dynamic>> _subdivisions = [];
   Map<int, List<Map<String, dynamic>>> _calculatorsBySubdivision = {};
   final Map<int, bool> _isExpanded = {};
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   final _dbHelper = DatabaseHelper.instance;
 
@@ -37,6 +37,12 @@ class _SearchScreenState extends State<SearchScreen> {
         name: 'SearchScreen',
       );
       await _selectArea(cachedAreaId);
+    } else {
+      if (mounted) {
+        setState(
+          () => _isLoading = false,
+        ); // Завершаем "загрузку", если нет кэша
+      }
     }
   }
 
@@ -118,7 +124,9 @@ class _SearchScreenState extends State<SearchScreen> {
         _isExpanded[subId] = false;
       }
 
-      final areaName = await _dbHelper.getAreaName(areaId); // Получаем название области
+      final areaName = await _dbHelper.getAreaName(
+        areaId,
+      ); // Получаем название области
       final prefs = await SharedPreferences.getInstance();
 
       await prefs.setInt('selectedAreaId', areaId); // Сохраняем выбор в кэш
@@ -180,7 +188,10 @@ class _SearchScreenState extends State<SearchScreen> {
               // Добавлено: Вывод наименования выбранной области
               Text(
                 _selectedAreaName != null ? '$_selectedAreaName' : '',
-                style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -189,7 +200,17 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : _selectedAreaId == null
                         ? const Center(
-                          child: Text('Выберите область строительства'),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Выберите область в правом верхнем углу',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.build),
+                            ],
+                          ),
                         )
                         : _subdivisions.isEmpty
                         ? const Center(child: Text('Подразделы не найдены'))
