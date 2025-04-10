@@ -1,7 +1,7 @@
 import 'package:engineer_assistant/data/db_seeder.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'dart:developer' as developer;
+// import 'dart:developer' as developer;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -38,8 +38,6 @@ class DatabaseHelper {
         birth_date TEXT,
         position TEXT,
         organization TEXT,
-        area_id INTEGER,
-        FOREIGN KEY (area_id) REFERENCES areas(id)
       )
     ''');
 
@@ -85,11 +83,6 @@ class DatabaseHelper {
     final db = await database;
     final result = await db.query('users', limit: 1);
     return result.isNotEmpty ? result.first : null;
-  }
-
-  Future<void> updateUser({required int id, int? areaId}) async {
-    final db = await database;
-    await db.update('users', {'area_id': areaId}, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> updateUserFull({

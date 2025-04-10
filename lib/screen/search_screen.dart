@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../area.dart';
 import 'dart:developer' as developer;
+import '../data/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -11,43 +13,29 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final Area _areaManager = Area(); // Singleton экземпляр
-  Map<int, List<Map<String, dynamic>>> _calculatorsByArea = {};
+  int? _selectedAreaId; // Выбранная область
+  List<Map<String, dynamic>> _subdivisions = [];
+  Map<int, List<Map<String, dynamic>>> _calculatorsBySubdivision = {};
   final Map<int, bool> _isExpanded = {};
-  bool _isLoading = true; // Добавляем флаг загрузки
+  bool _isLoading = true;
+
+  final _dbHelper = DatabaseHelper.instance;
 
   @override
   void initState() {
     super.initState();
-    _loadAreasAndCalculators();
+    _loadCachedArea();
   }
 
-  Future<void> _loadAreasAndCalculators() async {
-    try {
+  Future<void> _loadCachedArea() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedAreaId = prefs.getInt('selectedAreaId');
+    if (cachedAreaId != null) {
       developer.log(
-        'Начало загрузки областей и калькуляторов',
+        'Загружаем сохранённую область: $cachedAreaId',
         name: 'SearchScreen',
       );
-      await _areaManager.loadAreas(); // Загружаем области через singleton
-      final Map<int, List<Map<String, dynamic>>> calculatorsByArea = {};
-      for (var area in _areaManager.areas) {
-        final areaId = area['id'] as int;
-        _isExpanded[areaId] = false; // По умолчанию все области свернуты
-      }
-      if (mounted) {
-        setState(() {
-          _calculatorsByArea = calculatorsByArea;
-          _isLoading = false;
-        });
-        developer.log(
-          'Загружено областей: ${_areaManager.areas.length}, калькуляторов: ${_calculatorsByArea.length}',
-          name: 'SearchScreen',
-        );
-      }
-    } catch (e) {
-      developer.log('Ошибка загрузки: $e', name: 'SearchScreen');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      await _selectArea(cachedAreaId);
     }
   }
 
@@ -100,6 +88,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 'Выбрана область: ${area['name']}',
                                 name: 'SearchScreen',
                               );
+                              _selectArea(area['id'] as int);
                               Navigator.pop(context);
                               // Здесь можно добавить логику выбора области
                             },
@@ -113,6 +102,37 @@ class _SearchScreenState extends State<SearchScreen> {
           );
         },
       );
+    }
+  }
+
+  Future<void> _selectArea(int areaId) async {
+    setState(() => _isLoading = true);
+    try {
+      final subdivisions = await _dbHelper.getSubdivisionsByArea(areaId);
+      final Map<int, List<Map<String, dynamic>>> calculatorsBySubdivision = {};
+      for (var subdivision in subdivisions) {
+        final subId = subdivision['id'] as int;
+        final calculators = await _dbHelper.getCalculatorsBySubdivision(subId);
+        calculatorsBySubdivision[subId] = calculators;
+        _isExpanded[subId] = false;
+      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('selectedAreaId', areaId); // Сохраняем выбор в кэш
+      if (mounted) {
+        setState(() {
+          _selectedAreaId = areaId;
+          _subdivisions = subdivisions;
+          _calculatorsBySubdivision = calculatorsBySubdivision;
+          _isLoading = false;
+        });
+        developer.log(
+          'Загружено подразделов: ${subdivisions.length}',
+          name: 'SearchScreen',
+        );
+      }
+    } catch (e) {
+      developer.log('Ошибка загрузки подразделов: $e', name: 'SearchScreen');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -156,20 +176,24 @@ class _SearchScreenState extends State<SearchScreen> {
                 child:
                     _isLoading
                         ? const Center(child: CircularProgressIndicator())
-                        : _areaManager.areas.isEmpty
-                        ? const Center(child: Text('Области не найдены'))
+                        : _selectedAreaId == null
+                        ? const Center(
+                          child: Text('Выберите область строительства'),
+                        )
+                        : _subdivisions.isEmpty
+                        ? const Center(child: Text('Подразделы не найдены'))
                         : ListView.builder(
-                          itemCount: _areaManager.areas.length,
+                          itemCount: _subdivisions.length,
                           itemBuilder: (context, index) {
-                            final area = _areaManager.areas[index];
-                            final areaId = area['id'] as int;
+                            final subdivision = _subdivisions[index];
+                            final subId = subdivision['id'] as int;
                             final calculators =
-                                _calculatorsByArea[areaId] ?? [];
+                                _calculatorsBySubdivision[subId] ?? [];
                             return ExpansionTile(
-                              title: Text(area['name']),
-                              initiallyExpanded: _isExpanded[areaId] ?? false,
+                              title: Text(subdivision['name']),
+                              initiallyExpanded: _isExpanded[subId] ?? false,
                               onExpansionChanged: (expanded) {
-                                setState(() => _isExpanded[areaId] = expanded);
+                                setState(() => _isExpanded[subId] = expanded);
                               },
                               children:
                                   calculators.map((calculator) {

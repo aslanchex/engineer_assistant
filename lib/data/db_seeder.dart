@@ -1,9 +1,9 @@
 import 'package:sqflite/sqflite.dart';
-import 'database_helper.dart';
+// import 'database_helper.dart';
 import 'dart:developer' as developer;
 
 class DatabaseSeeder {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  // final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   Future<void> seed(Database db) async {
     try {
