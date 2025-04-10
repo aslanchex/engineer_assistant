@@ -1,4 +1,6 @@
+import 'dart:developer' as developer;
 import 'package:engineer_assistant/data/db_seeder.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 // import 'dart:developer' as developer;
@@ -37,7 +39,7 @@ class DatabaseHelper {
         gender TEXT,
         birth_date TEXT,
         position TEXT,
-        organization TEXT,
+        organization TEXT
       )
     ''');
 
@@ -71,12 +73,22 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getSubdivisionsByArea(int areaId) async {
     final db = await database;
-    return await db.query('subdivisions', where: 'area_id = ?', whereArgs: [areaId]);
+    return await db.query(
+      'subdivisions',
+      where: 'area_id = ?',
+      whereArgs: [areaId],
+    );
   }
 
-  Future<List<Map<String, dynamic>>> getCalculatorsBySubdivision(int subdId) async {
+  Future<List<Map<String, dynamic>>> getCalculatorsBySubdivision(
+    int subdId,
+  ) async {
     final db = await database;
-    return await db.query('calculators', where: 'subd_id = ?', whereArgs: [subdId]);
+    return await db.query(
+      'calculators',
+      where: 'subd_id = ?',
+      whereArgs: [subdId],
+    );
   }
 
   Future<Map<String, dynamic>?> getUser() async {
@@ -112,7 +124,12 @@ class DatabaseHelper {
 
   Future<String?> getAreaName(int areaId) async {
     final db = await database;
-    final result = await db.query('areas', where: 'id = ?', whereArgs: [areaId], limit: 1);
+    final result = await db.query(
+      'areas',
+      where: 'id = ?',
+      whereArgs: [areaId],
+      limit: 1,
+    );
     return result.isNotEmpty ? result.first['name'] as String? : null;
   }
 
@@ -121,6 +138,9 @@ class DatabaseHelper {
     final path = join(dbPath, 'app.db');
     await deleteDatabase(path);
     _database = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Полная очистка кэша
+    developer.log('База данных и весь кэш очищены', name: 'DatabaseHelper');
     await database; // Пересоздаём базу
   }
 }

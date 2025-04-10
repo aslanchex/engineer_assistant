@@ -136,13 +136,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Future<void> _updateField(String field, int value) async {
-  //   if (_user != null) {
-  //     await _dbHelper.updateUser(id: _user!['id']);
-  //     await _loadUser();
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {

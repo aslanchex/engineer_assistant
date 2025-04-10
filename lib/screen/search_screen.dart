@@ -14,6 +14,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final Area _areaManager = Area(); // Singleton экземпляр
   int? _selectedAreaId; // Выбранная область
+  String? _selectedAreaName; // Добавлено: Название выбранной области
   List<Map<String, dynamic>> _subdivisions = [];
   Map<int, List<Map<String, dynamic>>> _calculatorsBySubdivision = {};
   final Map<int, bool> _isExpanded = {};
@@ -116,11 +117,15 @@ class _SearchScreenState extends State<SearchScreen> {
         calculatorsBySubdivision[subId] = calculators;
         _isExpanded[subId] = false;
       }
+
+      final areaName = await _dbHelper.getAreaName(areaId); // Получаем название области
       final prefs = await SharedPreferences.getInstance();
+
       await prefs.setInt('selectedAreaId', areaId); // Сохраняем выбор в кэш
       if (mounted) {
         setState(() {
           _selectedAreaId = areaId;
+          _selectedAreaName = areaName; // Сохраняем название
           _subdivisions = subdivisions;
           _calculatorsBySubdivision = calculatorsBySubdivision;
           _isLoading = false;
@@ -170,6 +175,12 @@ class _SearchScreenState extends State<SearchScreen> {
                     tooltip: 'Показать области',
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              // Добавлено: Вывод наименования выбранной области
+              Text(
+                _selectedAreaName != null ? 'Выбрана область: $_selectedAreaName' : '',
+                style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 16),
               Expanded(
