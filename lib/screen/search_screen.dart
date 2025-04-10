@@ -179,7 +179,7 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(height: 8),
               // Добавлено: Вывод наименования выбранной области
               Text(
-                _selectedAreaName != null ? 'Выбрана область: $_selectedAreaName' : '',
+                _selectedAreaName != null ? '$_selectedAreaName' : '',
                 style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 16),

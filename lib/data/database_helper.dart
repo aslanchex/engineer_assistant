@@ -39,7 +39,8 @@ class DatabaseHelper {
         gender TEXT,
         birth_date TEXT,
         position TEXT,
-        organization TEXT
+        organization TEXT,
+        theme TEXT DEFAULT 'system' -- Новое поле для темы
       )
     ''');
 
@@ -105,6 +106,7 @@ class DatabaseHelper {
     required String birthDate,
     required String position,
     required String organization,
+    required String theme, // Добавлено: Параметр темы
   }) async {
     final db = await database;
     await db.update(
@@ -116,6 +118,7 @@ class DatabaseHelper {
         'birth_date': birthDate,
         'position': position,
         'organization': organization,
+        'theme': theme, // Добавлено: Сохранение темы
       },
       where: 'id = ?',
       whereArgs: [id],
@@ -140,7 +143,7 @@ class DatabaseHelper {
     _database = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Полная очистка кэша
-    developer.log('База данных и весь кэш очищены', name: 'DatabaseHelper');
     await database; // Пересоздаём базу
+    developer.log('База данных и весь кэш очищены', name: 'DatabaseHelper');
   }
 }

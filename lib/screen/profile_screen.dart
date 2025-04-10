@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import '../data/database_helper.dart';
-import 'dart:developer' as developer; // Добавлено: Для логирования
+import 'dart:developer' as developer;
+
+import '../main.dart';
+import '../search_app_theme.dart'; // Добавлено: Для логирования
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _gender;
   DateTime? _birthDate;
   bool _isLoading = true; // Добавлено: Флаг загрузки
+  String? _theme; // Добавлено: Переменная для темы
 
   @override
   void initState() {
@@ -61,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : null;
           _positionController.text = user['position'] ?? '';
           _organizationController.text = user['organization'] ?? '';
+          _theme = user['theme'] ?? 'system'; // Загружаем тему
           developer.log(
             'Загруженные данные пользователя: $_user',
             name: 'ProfileScreen',
@@ -70,6 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       setState(() {
         _user = null;
+        _theme = 'system'; // По умолчанию системная тема
         developer.log('Пользователь не найден', name: 'ProfileScreen');
       });
     }
@@ -84,6 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'birth_date': _birthDate != null ? _birthDate!.toIso8601String() : '',
       'position': _positionController.text,
       'organization': _organizationController.text,
+      'theme': _theme ?? 'system', // Сохраняем тему
     };
     try {
       if (_user == null) {
@@ -105,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           birthDate: _birthDate != null ? _birthDate!.toIso8601String() : '',
           position: _positionController.text,
           organization: _organizationController.text,
+          theme: _theme ?? 'system', // Передаём тему
         );
         developer.log(
           'Обновлён пользователь с id: ${_user!['id']}',
@@ -113,6 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       setState(() => _isEditing = false);
       await _loadUser();
+      _applyTheme(); // Применяем тему после сохранения
     } catch (e) {
       developer.log('Ошибка сохранения: $e', name: 'ProfileScreen');
       if (mounted) {
@@ -133,6 +142,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (pickedDate != null && mounted) {
       setState(() => _birthDate = pickedDate);
+    }
+  }
+
+  void _applyTheme() {
+    // Применение темы через уведомление корневого виджета
+    final themeMode =
+        _theme == 'dark'
+            ? ThemeMode.dark
+            : _theme == 'light'
+            ? ThemeMode.light
+            : ThemeMode.system;
+    // Здесь мы уведомляем корневой виджет (например, через Provider или InheritedWidget)
+    if (mounted) {
+      CalculatorAppTheme.of(context)?.setThemeMode(themeMode);
+    }
+  }
+
+  String _formatTheme(String? theme) {
+    switch (theme) {
+      case 'system':
+        return 'Системная';
+      case 'dark':
+        return 'Тёмная';
+      case 'light':
+        return 'Светлая';
+      default:
+        return 'Системная';
     }
   }
 
@@ -175,6 +211,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text('Должность: ${_user!['position'] ?? ''}'),
                   const SizedBox(height: 16),
                   Text('Организация: ${_user!['organization'] ?? ''}'),
+                  const SizedBox(height: 16),
+                  Text('Тема оформления: ${_formatTheme(_theme)}'),
                 ] else ...[
                   TextField(
                     controller: _firstNameController,
@@ -260,6 +298,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Введена организация: $value',
                           name: 'ProfileScreen',
                         ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _theme,
+                    decoration: const InputDecoration(
+                      labelText: 'Тема оформления',
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'system',
+                        child: Text('Системная'),
+                      ),
+                      DropdownMenuItem(value: 'dark', child: Text('Тёмная')),
+                      DropdownMenuItem(value: 'light', child: Text('Светлая')),
+                    ],
+                    onChanged:
+                        _isEditing
+                            ? (value) => setState(() {
+                              _theme = value;
+                              developer.log(
+                                'Выбрана тема: $_theme',
+                                name: 'ProfileScreen',
+                              );
+                            })
+                            : null,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
