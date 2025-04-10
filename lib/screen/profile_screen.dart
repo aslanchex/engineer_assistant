@@ -171,6 +171,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _resetDatabase() async {
+    try {
+      await _dbHelper
+          .resetDatabase(); // Исправлено: Добавлены скобки для вызова метода
+      developer.log('База данных сброшена', name: 'ProfileScreen');
+      if (mounted) {
+        setState(() {
+          _user = null; // Очищаем данные пользователя
+          _firstNameController.clear();
+          _lastNameController.clear();
+          _positionController.clear();
+          _organizationController.clear();
+          _gender = null;
+          _birthDate = null;
+          _theme = 'system'; // Возвращаем тему по умолчанию
+          _isEditing = false; // Выключаем режим редактирования
+        });
+        await _loadData(); // Перезагружаем данные для обновления UI
+      }
+    } catch (e) {
+      developer.log('Ошибка сброса базы данных: $e', name: 'ProfileScreen');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка сброса: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -212,6 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text('Организация: ${_user!['organization'] ?? ''}'),
                   const SizedBox(height: 16),
                   Text('Тема оформления: ${_formatTheme(_theme)}'),
+                  const SizedBox(height: 16),
                 ] else ...[
                   TextField(
                     controller: _firstNameController,
@@ -330,8 +360,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
                 ElevatedButton(
-                  onPressed: _dbHelper.resetDatabase,
-                  child: const Text('Сброс БД'),
+                  onPressed: _resetDatabase,
+                  child: const Text('Удалить все данные'),
                 ),
               ],
             ),
